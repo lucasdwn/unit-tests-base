@@ -21,6 +21,7 @@ Este projeto implementa autenticação baseada em **JSON Web Tokens (JWT)** em u
 - **Redis** - armazenamento da blacklist de tokens.
 - **Docker** - para subir o Redis facilmente.
 - **Express** - servidor HTTP.
+- **REST Client (VSCode Extension)** - para testar as requisições do arquivo `/http/requests.http`.
 
 ---
 
@@ -29,7 +30,7 @@ Este projeto implementa autenticação baseada em **JSON Web Tokens (JWT)** em u
 ```
 app/
 ├── http/
-│   └── requests.http
+│   └── requests.http # Arquivo com requisições prontas para testar a API
 ├── src/
 │   ├── configs/
 │   │   ├── comandos.sql
@@ -89,6 +90,17 @@ npm run dev
 
 ---
 
+### ▶️ Testando a API com REST Client
+
+O arquivo `/http/requests.http` contém as requisições da aplicação (login, registro, logout, CRUD de contatos).
+Para executá-las diretamente no VSCode, instale a extensão:
+
+👉 REST Client (autor: Huachao Mao)
+
+Após instalar, basta abrir o arquivo `requests.http`, clicar em `Send Request` sobre a requisição desejada, e o VSCode mostrará a resposta no editor.
+
+---
+
 ### 🔑 Endpoints
 
 **Registro de usuário**
@@ -123,8 +135,21 @@ DELETE /contacts/:id
 
 ---
 
+### 📌 Por que usar blacklist de tokens no logout?
+
+Os JWTs são imutáveis: uma vez emitidos, não podem ser revogados no servidor até que expirem.
+Isso gera um problema: mesmo que o usuário faça logout, o token ainda seria válido até seu tempo de expiração.
+Para resolver isso, utilizamos uma blacklist de tokens armazenada no Redis:
+- No logout (`logoutUser` em `user.controller.ts`), o token é decodificado e adicionado ao Redis até o tempo de expiração (`exp`) definido no JWT;
+- O token é armazenado de forma segura: apenas seu hash SHA-256 é gravado, evitando expor o JWT completo;
+- No middleware de autenticação (`authMiddleware.ts`), antes de validar o token com `verifyToken` (`jwt.ts`), verificamos se o hash do token está na blacklist;
+- Se estiver, a requisição é bloqueada imediatamente.
+Assim, garantimos que tokens "descartados" não possam ser reutilizados, mesmo que ainda não tenham expirado.
+
+---
+
 ### 📌 Observações
 
-- A função `verifyToken` pode ser configurada para retornar o payload mesmo se o token estiver expirado, útil no processo de logout.
+- A função `verifyToken` (`src/utils/jwt.ts`) pode ser configurada para retornar o payload mesmo se o token estiver expirado - isso é útil no processo de logout.
 - O Redis é utilizado apenas como armazenamento de tokens inválidos (blacklist).
 - Em produção, recomenda-se configurar tempo de expiração para as chaves da blacklist no Redis (TTL).
