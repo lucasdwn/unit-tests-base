@@ -1,6 +1,6 @@
 // src/controllers/contact.controller.ts
 import { Request, Response } from "express";
-import pool from "../config/db";
+import pool from "../configs/db";
 import type { UserPayload } from "../types/express";
 
 

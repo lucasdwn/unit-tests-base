@@ -1,27 +1,72 @@
-## Segurança no Desenvolvimento de Aplicações
+## Autenticação com JWT e Redis
 
-Este repositório contém o código utilizado na aula sobre vulnerabilidades do tipo **Broken Access Control**, com foco na identificação de falhas de autorização e estratégias eficazes para sua mitigação.
+Este projeto implementa autenticação baseada em **JSON Web Tokens (JWT)** em uma aplicação Node.js/TypeScript, incluindo **controle de logout com blacklist de tokens** utilizando **Redis**.
 
-### Objetivos
+---
 
-O principal objetivo deste projeto é demonstrar, na prática, como falhas no controle de acesso podem ser exploradas e como evitá-las. Os tópicos abordados são:
+### 📌 Funcionalidades
 
-1. Conceitos de autenticação e autorização;
-2. Broken Access Control e sua posição no OWASP Top 10;
-3. Exemplos de falhas comuns, como:
-   - IDOR (Insecure Direct Object Reference);
-   - Escalada de privilégios vertical;
-4. Estratégias de mitigação:
-   - Verificações no lado do servidor;
-   - Princípio do menor privilégio;
-   - Uso de middlewares de autorização.
+- Registro e login de usuários.
+- Geração de **JWT** com payload customizado.
+- Validação de tokens.
+- Logout com inserção de tokens em blacklist (Redis).
+- Integração com Docker para execução do Redis.
+
+---
+
+### 🛠️ Tecnologias Utilizadas
+
+- **Node.js** + **TypeScript**.
+- **jose** - biblioteca para JWT.
+- **Redis** - armazenamento da blacklist de tokens.
+- **Docker** - para subir o Redis facilmente.
+- **Express** - servidor HTTP.
+
+---
+
+### 📂 Estrutura de Pastas
+
+```
+app/
+├── http/
+│   └── requests.http
+├── src/
+│   ├── configs/
+│   │   ├── comandos.sql
+│   │   ├── db.ts
+│   │   └── redis.ts
+│   ├── controllers/
+│   │   ├── contact.controller.ts
+│   │   └── user.controller.ts
+│   ├── middlewares/
+│   │   ├── authMiddleware.ts
+│   │   ├── errorHandler.ts
+│   │   └── validateBody.ts
+│   ├── routes/
+│   │   ├── contacts.routes.ts
+│   │   ├── index.ts
+│   │   └── users.routes.ts
+│   ├── types/
+│   │   ├── express/
+│   │   │   └── index.d.ts
+│   │   └── UserPayload.ts
+│   ├── utils/
+│   │   └── jwt.ts
+│   └── index.ts
+├── .env
+├── package-lock.json
+├── package.json
+└── tsconfig.json
+```
+
+---
 
 ### Como executar o projeto
 
 1. Clonando o repositório e instalando as dependências:
 ```bash
-git clone http://github.com/arleysouza/broken-access-control.git server
-cd server
+git clone https://github.com/arleysouza/unit-tests-base.git app
+cd app
 npm i
 ```
 
@@ -29,11 +74,11 @@ npm i
 - Crie um BD chamado `bdaula` no PostgreSQL (ou outro nome de sua preferência);
 - Atualize o arquivo `.env` com os dados de acesso ao banco;
 
-3. Execute os comandos SQL presentes no arquivo `src/comandos.sql` para criar as tabelas necessárias;
+3. Execute os comandos SQL presentes no arquivo `src/configs/comandos.sql` para criar as tabelas necessárias;
 
-4. Adicione a seguinte linha no arquivo `C:\Windows\System32\drivers\etc\hosts`:
+4. Subir o Redis com Docker
 ```bash
-127.0.0.1   vitima.local
+docker run --name redis -p 6379:6379 -d redis redis-server --requirepass 123
 ```
 
 5. Iniciando o servidor
@@ -42,10 +87,44 @@ npm start
 npm run dev
 ```
 
-### Observações
+---
 
-- O projeto utiliza Express.js, TypeScript, PostgreSQL e cookies de sessão;
-- As verificações de autenticação e autorização foram implementadas via middlewares localizados em `src/middlewares`;
-- Algumas rotas foram propositalmente deixadas vulneráveis para fins didáticos;
-- Os exercícios demonstram como usuários não autorizados podem acessar ou modificar dados de outros usuários se não houver validações adequadas no backend;
-- Nunca aplique essas práticas em ambientes reais sem os devidos controles de segurança.
+### 🔑 Endpoints
+
+**Registro de usuário**
+``` bash
+POST /users
+```
+
+**Login**
+``` bash
+POST /users/login
+```
+Resposta (exemplo):
+```bash
+{ "token": "eyJhbG..." }
+```
+
+**Logout**
+``` bash
+POST /users/logout
+```
+Invalida o token atual adicionando-o à blacklist no Redis.
+
+**Rotas protegidas**
+
+**Listar, criar, atualizar e adicionar contatos**
+``` bash
+GET /contacts
+POST /contacts
+PUT /contacts
+DELETE /contacts/:id
+```
+
+---
+
+### 📌 Observações
+
+- A função `verifyToken` pode ser configurada para retornar o payload mesmo se o token estiver expirado, útil no processo de logout.
+- O Redis é utilizado apenas como armazenamento de tokens inválidos (blacklist).
+- Em produção, recomenda-se configurar tempo de expiração para as chaves da blacklist no Redis (TTL).

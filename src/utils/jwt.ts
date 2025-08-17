@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { SignJWT, jwtVerify, decodeJwt, errors } from "jose";
 import type { UserPayload } from "../types/express";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET || "default_secret");
@@ -19,7 +19,21 @@ export async function generateToken(payload: UserPayload): Promise<string> {
 /**
  * Valida e retorna o payload do JWT
  */
-export async function verifyToken(token: string): Promise<UserPayload> {
-  const { payload } = await jwtVerify<UserPayload>(token, secret, { algorithms: [alg] });
-  return payload;
+export async function verifyToken(
+  token: string,
+  ignoreExpiration = false
+): Promise<UserPayload> {
+  try {
+    const { payload } = await jwtVerify<UserPayload>(token, secret, {
+      algorithms: [alg],
+    });
+    return payload;
+  } catch (err) {
+    if (ignoreExpiration && err instanceof errors.JWTExpired) {
+      // Decodifica sem validar exp
+      const payload = decodeJwt<UserPayload>(token);
+      return payload;
+    }
+    throw err;
+  }
 }

@@ -1,9 +1,11 @@
 // src/controllers/user.controller.ts
 import { Request, Response } from "express";
 import bcrypt from "bcrypt";
-import db from "../config/db";
-import { generateToken } from "../utils/jwt";
+import db from "../configs/db";
+import { generateToken, verifyToken } from "../utils/jwt";
 import type { UserPayload } from "../types/express";
+import redisClient from "../configs/redis";
+import crypto from "crypto";
 
 // --- Criar usuário ---
 export const createUser = async (req: Request, res: Response): Promise<void> => {
@@ -75,11 +77,47 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
 };
 
 // --- Logout de usuário ---
-export const logoutUser = async (_req: Request, res: Response): Promise<void> => {
+// O token será adicionado ao Redis blacklist até expirar
+export const logoutUser = async (req: Request, res: Response): Promise<void> => {
   try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      res.status(401).json({
+        success: false,
+        error: "Token não fornecido",
+      });
+      return;
+    }
+
+    const token = authHeader.split(" ")[1];
+
+    // Decodifica o token (mesmo que expirado)
+    const decoded: any = await verifyToken(token, true);
+    const exp = decoded?.exp;
+    if (!exp) {
+      res.status(400).json({
+        success: false,
+        error: "Token inválido",
+      });
+      return;
+    }
+
+    // TTL em segundos
+    const ttl = exp - Math.floor(Date.now() / 1000);
+
+    // Usar hash do token para evitar armazenar JWT completo no Redis
+    const tokenHash = crypto.createHash("sha256").update(token).digest("hex");
+
+    if (ttl > 0) {
+      await redisClient.setex(`blacklist:jwt:${tokenHash}`, ttl, "true");
+    } else {
+      // Se já expirou, ainda adiciona por 60s para evitar race condition
+      await redisClient.setex(`blacklist:jwt:${tokenHash}`, 60, "true");
+    }
+
     res.status(200).json({
       success: true,
-      data: { message: "Logout realizado com sucesso." },
+      data: { message: "Logout realizado com sucesso. Token invalidado." },
     });
   } catch (error) {
     console.error(error);
