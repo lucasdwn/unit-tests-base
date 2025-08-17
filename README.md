@@ -48,9 +48,8 @@ app/
 │   │   ├── index.ts
 │   │   └── users.routes.ts
 │   ├── types/
-│   │   ├── express/
-│   │   │   └── index.d.ts
-│   │   └── UserPayload.ts
+│   │   └── express/
+│   │       └── index.d.ts
 │   ├── utils/
 │   │   └── jwt.ts
 │   └── index.ts
@@ -145,6 +144,26 @@ Para resolver isso, utilizamos uma blacklist de tokens armazenada no Redis:
 - No middleware de autenticação (`authMiddleware.ts`), antes de validar o token com `verifyToken` (`jwt.ts`), verificamos se o hash do token está na blacklist;
 - Se estiver, a requisição é bloqueada imediatamente.
 Assim, garantimos que tokens "descartados" não possam ser reutilizados, mesmo que ainda não tenham expirado.
+
+---
+
+### 📌 Tipagem customizada para Express
+
+No arquivo `src/types/express/index.d.ts`, definimos o tipo `UserPayload` e estendemos a interface `Request` do Express. Motivo:
+- Permite que o TypeScript reconheça a propriedade `req.user` que é adicionada pelo middleware de autenticação (`authMiddleware.ts`);
+- Evita o uso de `any` e fornece autocompletar e validação de tipos ao acessar informações do usuário autenticado dentro das rotas;
+- Garante maior segurança de tipos e evita erros de runtime ao manipular dados do usuário.
+***Observação sobre o `tsconfig.json`:**
+Certifique-se de que a pasta `src/types` esteja incluída no `include` do `tsconfig.json`, por exemplo:
+```json
+{
+  "compilerOptions": {
+    ...
+  },
+  "include": ["src/**/*.ts", "src/types/**/*.d.ts"]
+}
+
+```
 
 ---
 
