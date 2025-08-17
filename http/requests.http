@@ -1,0 +1,52 @@
+### Login
+# @name login
+POST http://localhost:3001/users/login
+Content-Type: application/json
+
+{
+  "username": "pedro.silva",
+  "password": "123456"
+}
+
+
+### Register User
+POST http://localhost:3001/users
+Content-Type: application/json
+
+{
+  "username": "jose.souza",
+  "password": "1232" 
+}
+
+### Logout
+POST http://localhost:3001/users/logout
+Authorization: Bearer {{login.response.body.data.token}}
+
+### List Contacts
+GET http://localhost:3001/contacts
+Authorization: Bearer {{login.response.body.data.token}}
+
+### Create Contact
+POST http://localhost:3001/contacts
+Authorization: Bearer {{login.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "name": "Rodrigo Arantes",
+  "phone": "12988664422"
+}
+
+### Atualiza Contact
+PUT http://localhost:3001/contacts/4
+Authorization: Bearer {{login.response.body.data.token}}
+Content-Type: application/json
+
+{
+  "name": "Thiago França",
+  "phone": "12988664400"
+}
+
+### Remove Contact
+DELETE http://localhost:3001/contacts/4
+Authorization: Bearer {{login.response.body.data.token}}
+
