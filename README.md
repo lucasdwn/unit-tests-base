@@ -8,7 +8,7 @@ Este projeto implementa autenticação baseada em **JSON Web Tokens (JWT)** em u
 
 - Registro e login de usuários.
 - Geração de **JWT** com payload customizado.
-- Validação de tokens.
+- Validação de tokens com `jsonwebtoken`.
 - Logout com inserção de tokens em blacklist (Redis).
 - Integração com Docker para execução do Redis.
 
@@ -17,7 +17,7 @@ Este projeto implementa autenticação baseada em **JSON Web Tokens (JWT)** em u
 ### 🛠️ Tecnologias Utilizadas
 
 - **Node.js** + **TypeScript**.
-- **jose** - biblioteca para JWT.
+- **jsonwebtoken** - biblioteca para geração e validação de JWT.
 - **Redis** - armazenamento da blacklist de tokens.
 - **Docker** - para subir o Redis facilmente.
 - **Express** - servidor HTTP.
@@ -48,8 +48,9 @@ app/
 │   │   ├── index.ts
 │   │   └── users.routes.ts
 │   ├── types/
-│   │   └── express/
-│   │       └── index.d.ts
+│   │   ├── express/
+│   │   │   └── index.d.ts
+│   │   └── global.d.ts
 │   ├── utils/
 │   │   └── jwt.ts
 │   └── index.ts
@@ -151,12 +152,19 @@ Assim, garantimos que tokens "descartados" não possam ser reutilizados, mesmo q
 
 ---
 
-### 📌 Tipagem customizada para Express
+### 📌 Tipagem customizada
 
-No arquivo `src/types/express/index.d.ts`, definimos o tipo `UserPayload` e estendemos a interface `Request` do Express. Motivo:
-- Permite que o TypeScript reconheça a propriedade `req.user` que é adicionada pelo middleware de autenticação (`authMiddleware.ts`);
-- Evita o uso de `any` e fornece autocompletar e validação de tipos ao acessar informações do usuário autenticado dentro das rotas;
-- Garante maior segurança de tipos e evita erros de runtime ao manipular dados do usuário.
+1. Para o Express (`src/types/express/index.d.ts`)
+- Estende a interface `Request` do Express para incluir a propriedade `req.user`, adicionada pelo middleware de autenticação.
+- Permite que o TypeScript forneça autocompletar e checagem de tipos ao acessar `req.user` dentro das rotas.
+
+
+2. Para variáveis globais (`src/types/global.d.ts`)
+- Declara os objetos `global.pool` (PostgreSQL) e `global.redis` (Redis) usados nos testes.
+- Evita que o TypeScript acuse erro de tipo quando usamos `global.pool.query(...)` ou `global.redis.ping()`.
+- Garante que essas variáveis tenham tipagem forte, em vez de `any`.
+
+
 ***Observação sobre o `tsconfig.json`:**
 Certifique-se de que a pasta `src/types` esteja incluída no `include` do `tsconfig.json`, por exemplo:
 ```json
@@ -166,7 +174,6 @@ Certifique-se de que a pasta `src/types` esteja incluída no `include` do `tscon
   },
   "include": ["src/**/*.ts", "src/types/**/*.d.ts"]
 }
-
 ```
 
 ---
