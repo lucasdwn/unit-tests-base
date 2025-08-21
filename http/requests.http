@@ -4,7 +4,7 @@ POST http://localhost:3001/users/login
 Content-Type: application/json
 
 {
-  "username": "pedro.silva",
+  "username": "jose.souza",
   "password": "123456"
 }
 
@@ -15,7 +15,7 @@ Content-Type: application/json
 
 {
   "username": "jose.souza",
-  "password": "1232" 
+  "password": "123456" 
 }
 
 ### Logout

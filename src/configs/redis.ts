@@ -1,33 +1,26 @@
 import Redis from "ioredis";
+import type { RedisOptions } from "ioredis";
 
-// Carrega variáveis de ambiente do .env
-const redisHost = process.env.REDIS_HOST;
-const redisPort = parseInt(process.env.REDIS_PORT || "6379", 10);
-const redisPassword = process.env.REDIS_PASSWORD || undefined;
+const redisHost = process.env.REDIS_HOST || "127.0.0.1";
+const redisPort = Number(process.env.REDIS_PORT);
+const redisPassword = process.env.REDIS_PASSWORD;
 
-// Inicializa o cliente Redis
-const redisClient = new Redis({
+// Monta opções dinamicamente
+const redisOptions: RedisOptions = {
   host: redisHost,
   port: redisPort,
-  password: redisPassword,
-  retryStrategy: (times) => {
-    // Exponencial backoff até no máximo 2 segundos
-    return Math.min(times * 50, 2000);
-  },
-});
+  retryStrategy: (times) => Math.min(times * 50, 2000),
+};
+
+// Só adiciona a senha se estiver definida
+if (redisPassword) {
+  redisOptions.password = redisPassword;
+}
+
+const redisClient = new Redis(redisOptions);
 
 // Eventos de log (opcional)
-redisClient.on("connect", () => {
-  console.log("Redis conectado com sucesso!");
-});
-
-redisClient.on("error", (err) => {
-  console.error("Erro no Redis:", err);
-});
+//redisClient.on("connect", () => console.log("Redis conectado com sucesso!"));
+redisClient.on("error", (err) => console.error("Erro no Redis:", err));
 
 export default redisClient;
-
-/*
-# Subir servidor Redis no Docker
-docker run --name redis -p 6379:6379 -d redis redis-server --requirepass 123
-*/

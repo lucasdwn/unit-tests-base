@@ -1,9 +1,13 @@
 import { Request, Response, NextFunction } from "express";
-import { verifyToken } from "../utils/jwt";
+import { verifyToken } from "../utils/jwt"; // agora usa jsonwebtoken
 import redisClient from "../configs/redis";
 import crypto from "crypto";
 
-export async function authMiddleware(req: Request, res: Response, next: NextFunction) {
+export async function authMiddleware(
+  req: Request,
+  res: Response,
+  next: NextFunction
+) {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -21,7 +25,7 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
 
     // Verifica se token está na blacklist do Redis
     const isBlacklisted = await redisClient.get(`blacklist:jwt:${tokenHash}`);
-    if (isBlacklisted) {
+     if (isBlacklisted) {
       res.status(401).json({
         success: false,
         error: "Token expirado ou inválido",
@@ -30,9 +34,9 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
     }
 
     // Verifica e decodifica o token
-    const payload = await verifyToken(token);
+    const payload = verifyToken(token);
 
-    req.user = payload; // tipado corretamente via .d.ts
+    req.user = payload; // tipado via types/express/index.d.ts
     next();
   } catch (err: any) {
     res.status(401).json({

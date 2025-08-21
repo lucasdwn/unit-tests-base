@@ -24,8 +24,6 @@ export const createUser = async (req: Request, res: Response): Promise<void> => 
       data: { message: "Usuário criado com sucesso." },
     });
   } catch (error: any) {
-    console.error(error);
-
     if (error.code === "23505") {
       res.status(400).json({
         success: false,
@@ -60,7 +58,8 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
     }
 
     const payload: UserPayload = { id: user.id, username: user.username };
-    const token = await generateToken(payload);
+    
+    const token = generateToken(payload);
 
     res.status(200).json({
       success: true,
@@ -70,8 +69,7 @@ export const loginUser = async (req: Request, res: Response): Promise<void> => {
         user: { id: user.id, username: user.username },
       },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
     res.status(500).json({ success: false, error: "Erro ao realizar login." });
   }
 };
@@ -92,7 +90,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
     const token = authHeader.split(" ")[1];
 
     // Decodifica o token (mesmo que expirado)
-    const decoded: any = await verifyToken(token, true);
+    const decoded: any = verifyToken(token, true);
     const exp = decoded?.exp;
     if (!exp) {
       res.status(400).json({
@@ -119,8 +117,7 @@ export const logoutUser = async (req: Request, res: Response): Promise<void> => 
       success: true,
       data: { message: "Logout realizado com sucesso. Token invalidado." },
     });
-  } catch (error) {
-    console.error(error);
+  } catch (error:any) {
     res.status(500).json({ success: false, error: "Erro ao realizar logout." });
   }
 };

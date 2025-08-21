@@ -78,7 +78,11 @@ npm i
 
 4. Subir o Redis com Docker
 ```bash
-docker run --name redis -p 6379:6379 -d redis redis-server --requirepass 123
+docker run --name redis -p 6379:6379 -d redis:alpine redis-server --requirepass 123
+```
+ou
+```bash
+npm run redis-start
 ```
 
 5. Iniciando o servidor
