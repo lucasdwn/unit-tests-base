@@ -7,9 +7,9 @@
     "redis-start": "docker run --name redis -p 6379:6379 -d redis redis-server --requirepass 123",
     "start": "ts-node ./src",
     "dev": "ts-node-dev ./src",
-    "test": "npm run test:up && cross-env NODE_ENV=test jest --detectOpenHandles && npm run test:down",
+    "test": "npm run test:up && cross-env NODE_ENV=test jest --detectOpenHandles --forceExit && npm run test:stop",
     "test:up": "docker-compose -f docker-compose.test.yml up -d",
-    "test:down": "docker-compose -f docker-compose.test.yml down -v"
+    "test:stop": "docker-compose -f docker-compose.test.yml stop"
   },
   "keywords": [],
   "author": "",
