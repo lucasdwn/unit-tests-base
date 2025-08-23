@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "redis-start": "docker run --name redis -p 6379:6379 -d redis redis-server --requirepass 123",
+    "redis-start": "docker run --name redis -p 6379:6379 -d redis:alpine redis-server --requirepass 123",
     "start": "ts-node ./src",
     "dev": "ts-node-dev ./src",
     "test": "npm run test:up && cross-env NODE_ENV=test jest --detectOpenHandles --forceExit && npm run test:stop",
